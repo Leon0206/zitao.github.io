@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<!-- saved from url=(0053)https://www.cnblogs.com/hualuoshuijia/p/14479984.html -->
+<html lang="zh-cn" style="--olcb-folder-code-block-max-height:80vh;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="never">
+    <meta name="description" content="这里是字节跳动的团队的博客，还有一篇地址，基本原理都有，可以参考看看 背景 启动是App给用户的第一印象，对用户体验至关重要。抖音的业务迭代迅速，如果放任不管，启动速度会一点点劣化。为此抖音iOS客户">
+    <meta property="og:description" content="这里是字节跳动的团队的博客，还有一篇地址，基本原理都有，可以参考看看 背景 启动是App给用户的第一印象，对用户体验至关重要。抖音的业务迭代迅速，如果放任不管，启动速度会一点点劣化。为此抖音iOS客户">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园</title>
+    <link id="favicon" rel="shortcut icon" href="https://common.cnblogs.com/favicon.svg" type="image/svg+xml">
+    
+    <style>#home :not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs), :not(.cnblogs_code):not(.cnblogs_Highlighter)>pre:not([highlighted]):not([class*="brush:"]) code:not(.hljs) {background: rgb(245, 245, 245);
+        padding: 12px;
+        border: 1px solid rgb(204, 204, 204);
+        border-radius: 3px;
+        border-color: transparent;
+        color: rgb(68, 68, 68);
+        font-family: "Courier New", sans-serif;
+        font-size: 12px</style><link rel="stylesheet" href="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/blog-common.min.css">
+    
+
+    <link id="MainCss" rel="stylesheet" href="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/bundle-simpleblue.min.css">
+        <link id="highlighter-theme-cnblogs" type="text/css" rel="stylesheet" href="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/cnblogs.css">
+    
+    
+    <link id="mobile-style" media="only screen and (max-width: 767px)" type="text/css" rel="stylesheet" href="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/bundle-simpleblue-mobile.min.css">
+    
+    <link type="application/rss+xml" rel="alternate" href="https://www.cnblogs.com/hualuoshuijia/rss">
+    <link type="application/rsd+xml" rel="EditURI" href="https://www.cnblogs.com/hualuoshuijia/rsd.xml">
+    <link type="application/wlwmanifest+xml" rel="wlwmanifest" href="https://www.cnblogs.com/hualuoshuijia/wlwmanifest.xml">
+    <script type="text/javascript" async="" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/analytics.js"></script><script>
+        var currentBlogId = 254294;
+        var currentBlogApp = 'hualuoshuijia';
+        var isLogined = false;
+        var isBlogOwner = false;
+        var skinName = 'SimpleBlue';
+        var visitorUserId = '';
+        var hasCustomScript = false;
+        try {
+            if (hasCustomScript && document.referrer && document.referrer.indexOf('baidu.com') >= 0) {
+                Object.defineProperty(document, 'referrer', { value: '' });
+                Object.defineProperty(Document.prototype, 'referrer', { get: function () { return ''; } });
+            }
+        } catch (error) { }
+        window.cb_enable_mathjax = false;
+        window.mathEngine = 0;
+        window.codeHighlightEngine = 1;
+        window.enableCodeLineNumber = false;
+        window.codeHighlightTheme = 'cnblogs';
+        window.darkModeCodeHighlightTheme = 'vs2015';
+        window.isDarkCodeHighlightTheme = false;
+        window.isDarkModeCodeHighlightThemeDark = true;
+        window.isDisableCodeHighlighter = false;
+        window.enableCodeThemeTypeFollowSystem = false;
+    </script>
+        <script>
+            var currentPostDateAdded = '2021-03-04 14:15';
+        </script>
+    <script src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/jquery-2.2.0.min.js"></script>
+    <script src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/blog-common.min.js"></script><style>.medium-zoom-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 300ms;
+  will-change: opacity;
+}
+
+.medium-zoom--opened .medium-zoom-overlay {
+  cursor: pointer;
+  cursor: zoom-out;
+  opacity: 1;
+}
+
+.medium-zoom-image {
+  cursor: pointer;
+  cursor: zoom-in;
+  /*
+    The `transition` is marked as "!important" for the animation to happen
+    even though it's overriden by another inline `transition` style attribute.
+
+    This is problematic with frameworks that generate inline styles on their
+    images (e.g. Gatsby).
+
+    See https://github.com/francoischalifour/medium-zoom/issues/110
+   */
+  transition: transform 300ms cubic-bezier(0.2, 0, 0.2, 1) !important;
+}
+
+.medium-zoom-image--hidden {
+  visibility: hidden;
+}
+
+.medium-zoom-image--opened {
+  position: relative;
+  cursor: pointer;
+  cursor: zoom-out;
+  will-change: transform;
+}
+</style><script id="hljs-script" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/highlight.min.js" type="text/javascript" async=""></script>
+    
+
+    
+<meta http-equiv="origin-trial" content="Az6AfRvI8mo7yiW5fLfj04W21t0ig6aMsGYpIqMTaX60H+b0DkO1uDr+7BrzMcimWzv/X7SXR8jI+uvbV0IJlwYAAACFeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjgwNjUyNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A+USTya+tNvDPaxUgJooz+LaVk5hPoAxpLvSxjogX4Mk8awCTQ9iop6zJ9d5ldgU7WmHqBlnQB41LHHRFxoaBwoAAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjgwNjUyNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A7FovoGr67TUBYbnY+Z0IKoJbbmRmB8fCyirUGHavNDtD91CiGyHHSA2hDG9r9T3NjUKFi6egL3RbgTwhhcVDwUAAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjgwNjUyNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><script src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/pubads_impl_2023022701.js" async=""></script><link rel="preload" href="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/f.txt" as="script"><script type="text/javascript" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/f.txt"></script></head>
+<body class="skin-simpleblue has-navbar hljs-engine" data-new-gr-c-s-check-loaded="14.1098.0" data-gr-ext-installed="">
+    <a name="top"></a>
+    <div id="top_nav" class="navbar forpc">
+        <nav id="nav_main" class="navbar-main">
+            <ul id="nav_left" class="navbar-list navbar-left">
+                <li class="navbar-branding">
+                    <a href="https://www.cnblogs.com/" title="开发者的网上家园" role="banner">
+                            <img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/logo.svg" alt="博客园Logo">
+                    </a>
+                </li>
+                <li>
+                    <a href="https://www.cnblogs.com/" onclick="countClicks(&#39;skin-navbar-sitehome&#39;)">首页</a>
+                </li>
+                <li>
+                    <a href="https://news.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-news&#39;)">新闻</a>
+                </li>
+                <li>
+                    <a href="https://q.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-q&#39;)">博问</a>
+                </li>
+                <li>
+                    <a id="nav_brandzone" href="https://brands.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-brands&#39;)">专区</a>
+                </li>
+                <li>
+                    <a href="https://ing.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-ing&#39;)">闪存</a>
+                </li>
+                <li>
+                    <a href="https://edu.cnblogs.com/" onclick="countClicks(&#39;nav&#39;, &#39;skin-navbar-edu&#39;)">班级</a>
+                </li>
+            </ul>
+            <ul id="nav_right" class="navbar-list navbar-right">
+                <li>
+                    <form id="zzk_search" class="navbar-search dropdown" action="https://zzk.cnblogs.com/s" method="get" role="search">
+                        <input name="w" id="zzk_search_input" placeholder="代码改变世界" type="search" tabindex="3" autocomplete="off">
+                        <button id="zzk_search_button" onclick="window.navbarSearchManager.triggerActiveOption()">
+                            <img id="search_icon" class="focus-hidden" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/search.svg" alt="搜索">
+                            <img class="hidden focus-visible" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/enter.svg" alt="搜索">
+                        </button>
+                        <ul id="navbar_search_options" class="dropdown-menu quick-search-menu">
+                            <li tabindex="0" class="active" onclick="zzkSearch(event, document.getElementById(&#39;zzk_search_input&#39;).value)">
+                                <div class="keyword-wrapper">
+                                    <img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/search.svg" alt="搜索">
+                                    <div class="keyword"></div>
+                                </div>
+                                <span class="search-area">所有博客</span>
+                            </li>
+                                    <li tabindex="1" onclick="zzkBlogSearch(event, &#39;hualuoshuijia&#39;, document.getElementById(&#39;zzk_search_input&#39;).value)">
+                                        <div class="keyword-wrapper">
+                                            <img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/search.svg" alt="搜索">
+                                            <div class="keyword"></div>
+                                        </div>
+                                        <span class="search-area">当前博客</span>
+                                    </li>
+                        </ul>
+                    </form>
+                </li>
+                <li id="navbar_login_status" class="navbar-list">
+                    <a class="navbar-user-info navbar-blog" href="https://i.cnblogs.com/EditPosts.aspx?opt=1" alt="写随笔" title="写随笔" style="display: none;">
+                        <img id="new_post_icon" class="navbar-icon" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/newpost.svg" alt="写随笔">
+                    </a>
+                    <a id="navblog-myblog-icon" class="navbar-user-info navbar-blog" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx" alt="我的博客" title="我的博客" style="display: none;">
+                        <img id="myblog_icon" class="navbar-icon" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/myblog.svg" alt="我的博客">
+                    </a>
+                    <a class="navbar-user-info navbar-message navbar-icon-wrapper" href="https://msg.cnblogs.com/" alt="短消息" title="短消息" style="display: none;">
+                        <img id="msg_icon" class="navbar-icon" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/message.svg" alt="短消息">
+                        <span id="msg_count" style="display: none"></span>
+                    </a>
+                    <a id="navbar_lite_mode_indicator" data-current-page="blog" style="display: none" href="javascript:void(0)" alt="简洁模式" title="简洁模式启用，您在访问他人博客时会使用简洁款皮肤展示">
+                        <img class="navbar-icon" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/lite-mode-on.svg" alt="简洁模式">
+                    </a>
+                    <div id="user_info" class="navbar-user-info dropdown" style="display: none;">
+                        <a class="dropdown-button" href="https://home.cnblogs.com/">
+                            <img id="user_icon" class="navbar-avatar" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/avatar-default.svg" alt="用户头像">
+                        </a>
+                        <div class="dropdown-menu">
+                            <a id="navblog-myblog-text" href="https://passport.cnblogs.com/GetBlogApplyStatus.aspx">我的博客</a>
+                            <a href="https://home.cnblogs.com/">我的园子</a>
+                            <a href="https://account.cnblogs.com/settings/account">账号设置</a>
+                            <a href="javascript:void(0)" id="navbar_lite_mode_toggle" title="简洁模式会使用简洁款皮肤显示所有博客">
+    简洁模式 <img id="navbar_lite_mode_on" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/lite-mode-check.svg" class="hide"><span id="navbar_lite_mode_spinner" class="hide">...</span>
+</a>
+                            <a href="javascript:void(0)" onclick="account.logout();">退出登录</a>
+                        </div>
+                    </div>
+                    <a class="navbar-anonymous" href="https://account.cnblogs.com/signup" style="display: inline;">注册</a>
+                    <a class="navbar-anonymous" href="javascript:void(0);" onclick="account.login()" style="display: inline;">登录</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    
+
+    <div id="home">
+    <div id="header">
+        <div id="blogTitle">
+            <div class="title"><a id="Header1_HeaderTitle" class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/hualuoshuijia/">新年新气象934060369</a>
+</div>
+<div class="subtitle">欢迎发现问题后骚扰，我也好及时改正</div>
+
+        </div>
+        <div id="navigator">
+            
+<ul id="navList">
+    <li id="nav_sitehome"><a id="blog_nav_sitehome" class="menu" href="https://www.cnblogs.com/">
+博客园</a>
+</li>
+    <li id="nav_myhome">
+<a id="blog_nav_myhome" class="menu" href="https://www.cnblogs.com/hualuoshuijia/">
+首页</a>
+</li>
+    <li id="nav_newpost">
+
+<a id="blog_nav_newpost" class="menu" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">
+新随笔</a>
+</li>
+    <li id="nav_contact">
+<a id="blog_nav_contact" class="menu" href="https://msg.cnblogs.com/send/%E6%96%B0%E5%B9%B4%E6%96%B0%E6%B0%94%E8%B1%A1">
+联系</a></li>
+    <li id="nav_rss">
+<a id="blog_nav_rss" class="menu" href="javascript:void(0)" data-rss="https://www.cnblogs.com/hualuoshuijia/rss/">
+订阅</a></li>
+    <li id="nav_admin">
+<a id="blog_nav_admin" class="menu" href="https://i.cnblogs.com/">
+管理</a>
+</li>
+</ul>
+
+            <div class="blogStats">
+                
+<span id="stats_post_count">随笔 - 347&nbsp;</span>
+<span id="stats_article_count">文章 - 0&nbsp;</span>
+<span id="stats_comment_count">评论 - 20&nbsp;</span>
+<span id="stats_total_view_count">阅读 - 
+<span title="总阅读数: 367821">
+36万</span></span>
+            </div>
+        </div>
+    </div>
+    <div id="main">
+        <div id="mainContent">
+            <div class="forFlow">
+                <div id="post_detail">
+    <div id="topics">
+        <div class="post">
+            <h1 class="postTitle">
+                
+<a id="cb_post_title_url" class="postTitle2 vertical-middle" href="https://www.cnblogs.com/hualuoshuijia/p/14479984.html">
+    <span role="heading" aria-level="2">抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15%</span>
+    
+</a><button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button>
+
+            </h1>
+            <div class="clear"></div>
+            <div class="postBody">
+                <div id="cnblogs_post_body" class="blogpost-body blogpost-body-html">
+<h2 id="activity-name" class="rich_media_title">这里是字节跳动的团队的博客，还有一篇<a href="https://www.jianshu.com/p/559f724933ff" target="_blank" rel="noopener">地址</a>，基本原理都有，可以参考看看<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<div id="js_content" class="rich_media_content ">
+<h2>背景<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>启动是App给用户的第一印象，对用户体验至关重要。抖音的业务迭代迅速，如果放任不管，启动速度会一点点劣化。为此抖音iOS客户端团队做了大量优化工作，除了传统的修改业务代码方式，我们还做了些开拓性的探索，发现修改代码在二进制文件的布局可以提高启动性能，方案落地后在抖音上启动速度提高了约15%。</p>
+<p>本文从原理出发，介绍了我们是如何通过静态扫描和运行时trace找到启动时候调用的函数，然后修改编译参数完成二进制文件的重新排布。</p>
+<p>&nbsp;</p>
+<h2>原理<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<h3>Page Fault<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>进程如果能直接访问物理内存无疑是很不安全的，所以操作系统在物理内存的上又建立了一层虚拟内存。为了提高效率和方便管理，又对虚拟内存和物理内存又进行分页（Page）。当进程访问一个虚拟内存Page而对应的物理内存却不存在时，会触发一次缺页中断（Page Fault），分配物理内存，有需要的话会从磁盘mmap读人数据。</p>
+<p>通过App Store渠道分发的App，Page Fault还会进行签名验证，所以一次Page Fault的耗时比想象的要多：</p>
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640" alt="图片" data-ratio="0.13333333333333333" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakOtuwicItgHq3RkoAiam4O13ibmvkRS4icaicibxvhFfibXQkkt0yGwe64EicFg/640?wx_fmt=png" data-type="png" data-w="1500" data-fail="0" class="medium-zoom-image">Page Fault
+<h3>重排<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>编译器在生成二进制代码的时候，默认按照链接的Object File(.o)顺序写文件，按照Object File内部的函数顺序写函数。</p>
+<blockquote>
+<p>静态库文件.a就是一组.o文件的ar包，可以用<code>ar -t</code>查看.a包含的所有.o。</p>
+</blockquote>
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(1)" alt="图片" data-ratio="0.17" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakec8Sr8DyzMhKmjq2lG3cegO1Ld355Q5xl2f59tHSWEEsnwvKibwVLwQ/640?wx_fmt=png" data-type="png" data-w="1500" data-fail="0" class="medium-zoom-image">默认布局
+<p>简化问题：假设我们只有两个page：page1/page2，其中绿色的method1和method3启动时候需要调用，为了执行对应的代码，系统必须进行两个Page Fault。</p>
+<p>但如果我们把method1和method3排布到一起，那么只需要一个Page Fault即可，这就是二进制文件重排的核心原理。</p>
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(2)" alt="图片" data-ratio="0.17" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sak4TE7onmqHFfUzSRj6iaYh3aLPwdjElMgauMEicsNDHheEer97PbVAkzA/640?wx_fmt=png" data-type="png" data-w="1500" data-fail="0" class="medium-zoom-image">重排之后
+<p>我们的经验是优化一个Page Fault，启动速度提升0.6~0.8ms。</p>
+<p>&nbsp;</p>
+<h2>核心问题<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>为了完成重排，有以下几个问题要解决：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>重排效果怎么样 - 获取启动阶段的page fault次数</p>
+</li>
+<li>
+<p>重排成功了没 - 拿到当前二进制的函数布局</p>
+</li>
+<li>
+<p>如何重排 - 让链接器按照指定顺序生成Mach-O</p>
+</li>
+<li>
+<p>重排的内容 - 获取启动时候用到的函数</p>
+</li>
+</ul>
+<h2>&nbsp;</h2>
+<h2>System Trace<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>日常开发中性能分析是用最多的工具无疑是Time Profiler，但Time Profiler是基于采样的，并且只能统计线程实际在运行的时间，而发生Page Fault的时候线程是被blocked，所以我们需要用一个不常用但功能却很强大的工具：System Trace。</p>
+<p>选中主线程，在VM Activity中的File Backed Page In次数就是Page Fault次数，并且双击还能按时序看到引起Page Fault的堆栈：</p>
+<img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="图片" class="img_loading" data-ratio="0.2386904761904762" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakrZib1MQyNibYaKWTjIlvKGaw6M9Dx5dLwz7viapFNNvYveibkKvp7yf3Tg/640?wx_fmt=png" data-type="png" data-w="1680">System Trace
+<p>&nbsp;</p>
+<h2>signpost<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>现在我们在Instrument中已经能拿到某个时间段的Page In次数，那么如何和启动映射起来呢？</p>
+<p>我们的答案是：<code>os_signpost</code>。</p>
+<p><code>os_signpost</code>是iOS 12开始引入的一组API，可以在Instruments绘制一个时间段，代码也很简单：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-cpp"><span class="hljs-type">1os_log_t</span>&nbsp;logger&nbsp;=&nbsp;<span class="hljs-built_in">os_log_create</span>(<span class="hljs-string">"com.bytedance.tiktok"</span>,&nbsp;<span class="hljs-string">"performance"</span>);
+<span class="hljs-type">2os_signpost_id_t</span>&nbsp;signPostId&nbsp;=&nbsp;<span class="hljs-built_in">os_signpost_id_make_with_pointer</span>(logger,sign);
+<span class="hljs-number">3</span><span class="hljs-comment">//标记时间段开始</span>
+<span class="hljs-number">4</span>os_signpost_interval_begin(logger,&nbsp;signPostId,&nbsp;<span class="hljs-string">"Launch"</span>,<span class="hljs-string">"%{public}s"</span>,&nbsp;<span class="hljs-string">""</span>);
+<span class="hljs-number">5</span><span class="hljs-comment">//标记结束</span>
+<span class="hljs-number">6</span>os_signpost_interval_end(logger,&nbsp;signPostId,&nbsp;<span class="hljs-string">"Launch"</span>);</code></pre>
+<p>&nbsp;</p>
+<p>通常可以把启动分为四个阶段处理：</p>
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(3)" alt="图片" data-ratio="0.17959770114942528" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakTd1aCwdLDVUyfCSDCKTlgHqJJQmvBoAfP3cLRePB3fKgLEgyfZ7JpQ/640?wx_fmt=png" data-type="png" data-w="1392" data-fail="0" class="medium-zoom-image">启动阶段<br>
+<p>有多少个Mach-O，就会有多少个Load和C++静态初始化阶段，用signpost相关API对对应阶段打点，方便跟踪每个阶段的优化效果。</p>
+<p>&nbsp;</p>
+<h2>Linkmap<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>Linkmap是iOS编译过程的中间产物，记录了二进制文件的布局，需要在Xcode的Build Settings里开启Write Link Map File：</p>
+
+
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(4)" alt="图片" data-ratio="0.1348314606741573" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakMRib3oDem95J33TxFMdvveTxmq6akhXhYiaRndU1MEgCK3uK7UxOPJVg/640?wx_fmt=png" data-type="png" data-w="1157" data-fail="0" class="medium-zoom-image">Build Settings
+<p>比如以下是一个单页面Demo项目的linkmap。</p>
+
+
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(5)" alt="图片" data-ratio="0.34285714285714286" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakv39HvyWyLDMKEx7SXasnmMTQRbfw0L6L6YibfClibuDvibn4Ysg4K7d4Q/640?wx_fmt=png" data-type="png" data-w="1680" data-fail="0" class="medium-zoom-image">linkmap
+<p>linkmap主要包括三大部分：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>Object Files 生成二进制用到的link单元的路径和文件编号</p>
+
+
+</li>
+<li>
+<p>Sections 记录Mach-O每个Segment/section的地址范围</p>
+
+
+</li>
+<li>
+<p>Symbols 按顺序记录每个符号的地址范围</p>
+
+
+</li>
+
+
+</ul>
+<h2>&nbsp;</h2>
+<h2>ld<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>Xcode使用的链接器件是ld，ld有一个不常用的参数<code>-order_file</code>，通过<code>man ld</code>可以看到详细文档：</p>
+<blockquote>
+<p>Alters the order in which functions and data are laid out. For each section in the output file, any symbol in that section that are specified in the order file file is moved to the start of its section and laid out in the same order as in the order file file.</p>
+
+
+</blockquote>
+<p>可以看到，order_file中的符号会按照顺序排列在对应section的开始，完美的满足了我们的需求。</p>
+<p>Xcode的GUI也提供了order_file选项：</p>
+
+
+<img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="图片" class="img_loading" data-ratio="0.17083333333333334" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakD15Picgrt8Aq69FpHQ12ibcHeRSuUUphkicmACDA8GiaQHezTOvlFjMamQ/640?wx_fmt=png" data-type="png" data-w="1680">order_file
+<p>如果order_file中的符号实际不存在会怎么样呢？</p>
+<p>ld会忽略这些符号，如果提供了link选项<code>-order_file_statistics</code>，会以warning的形式把这些没找到的符号打印在日志里。</p>
+<p>&nbsp;</p>
+<h2>获得符号<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>还剩下最后一个，也是最核心的一个问题，获取启动时候用到的函数符号。</p>
+<p>我们首先排除了解析Instruments(Time Profiler/System Trace) trace文件方案，因为他们都是基于特定场景采样的，大多数符号获取不到。最后选择了静态扫描+运行时Trace结合的解决方案。</p>
+<h3>Load<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>Objective C的符号名是<code>+-[Class_name(category_name) method:name:]</code>，其中<code>+</code>表示类方法，<code>-</code>表示实例方法。</p>
+<p>刚刚提到linkmap里记录了所有的符号名，所以只要扫一遍linkmap的<code>__TEXT,__text</code>，正则匹配(<code>"^\+\[.*\ load\]$"</code>)既可以拿到所有的load方法符号。</p>
+<h3>C++静态初始化<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>C++并不像Objective C方法那样，大部分方法调用编译后都是<code>objc_msgSend</code>，也就没有一个入口函数去运行时hook。</p>
+<p>但是可以用<code>-finstrument-functions</code>在编译期插桩“hook”，但由于抖音的很多依赖由其他团队提供静态库，这套方案需要修改依赖的构建过程。二进制文件重排在没有业界经验可供参考，不确定收益的情况下，选择了并不完美但成本最低的静态扫描方案。</p>
+
+
+1. 扫描linkmap的<code>__DATA，__mod_init_func</code>，这个section存储了包含C++静态初始化方法的文件，获得文件号<code>[ 5]</code>。
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-less"><span class="hljs-number">1</span><span class="hljs-comment">//__mod_init_func</span>
+<span class="hljs-number">20</span><span class="hljs-selector-tag">x100008060</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-number">0</span><span class="hljs-selector-tag">x00000008</span>&nbsp;&nbsp;<span class="hljs-selector-attr">[&nbsp;&nbsp;5]</span>&nbsp;<span class="hljs-selector-tag">ltmp7</span>
+<span class="hljs-number">3</span><span class="hljs-comment">//[&nbsp;&nbsp;5]对应的文件</span>
+<span class="hljs-number">4</span><span class="hljs-selector-attr">[&nbsp;&nbsp;5]</span>&nbsp;.../<span class="hljs-selector-tag">Build</span>/<span class="hljs-selector-tag">Products</span>/<span class="hljs-selector-tag">Debug-iphoneos</span>/<span class="hljs-selector-tag">libStaticLibrary</span><span class="hljs-selector-class">.a</span>(StaticLibrary.o)</code></pre>
+<p>2. 通过文件号，解压出.o。</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-lua"><span class="hljs-number">1</span>➜&nbsp;&nbsp;lipo&nbsp;libStaticLibrary.a&nbsp;-thin&nbsp;arm64&nbsp;-<span class="hljs-built_in">output</span>&nbsp;arm64.a
+<span class="hljs-number">2</span>➜&nbsp;&nbsp;ar&nbsp;-x&nbsp;arm64.a&nbsp;StaticLibrary.o</code></pre>
+<p>3. 通过.o，获得静态初始化的符号名<code>_demo_constructor</code>。</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-lua"><span class="hljs-number">1</span>➜&nbsp;&nbsp;objdump&nbsp;-r&nbsp;-section=__mod_init_func&nbsp;StaticLibrary.o
+<span class="hljs-number">2</span>
+<span class="hljs-number">3</span>StaticLibrary.o:&nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;<span class="hljs-built_in">format</span>&nbsp;Mach-O&nbsp;arm64
+<span class="hljs-number">4</span>
+<span class="hljs-number">5</span>RELOCATION&nbsp;RECORDS&nbsp;FOR&nbsp;[__mod_init_func]:
+<span class="hljs-number">60000000000000000</span>&nbsp;ARM64_RELOC_UNSIGNED&nbsp;_demo_constructor</code></pre>
+<p>4. 通过符号名，文件号，在linkmap中找到符号在二进制中的范围：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-css"><span class="hljs-number">10</span>x100004A30&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-number">0</span>x0000001C&nbsp;&nbsp;<span class="hljs-selector-attr">[&nbsp;&nbsp;5]</span>&nbsp;_demo_constructor</code></pre>
+<p>5. 通过起始地址，对代码进行反汇编：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-mipsasm"> <span class="hljs-number">1</span>➜&nbsp;&nbsp;objdump&nbsp;-d&nbsp;--start-<span class="hljs-keyword">address=0x100004A30&nbsp;</span>--stop-<span class="hljs-keyword">address=0x100004A4B&nbsp;</span>demo_arm64&nbsp;
+ <span class="hljs-number">2</span>
+ <span class="hljs-number">3</span>_demo_constructor:
+ <span class="hljs-number">4100004</span>a30:&nbsp;&nbsp;&nbsp;&nbsp;fd&nbsp;<span class="hljs-number">7</span>b&nbsp;<span class="hljs-keyword">bf&nbsp;</span>a9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stp&nbsp;x29,&nbsp;x30,&nbsp;[<span class="hljs-built_in">sp</span>,&nbsp;<span class="hljs-comment">#-16]!</span>
+ <span class="hljs-number">5100004</span>a34:&nbsp;&nbsp;&nbsp;&nbsp;fd&nbsp;<span class="hljs-number">03</span>&nbsp;<span class="hljs-number">00</span>&nbsp;<span class="hljs-number">91</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;x29,&nbsp;<span class="hljs-built_in">sp</span>
+ <span class="hljs-number">6100004</span>a38:&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-number">20</span>&nbsp;<span class="hljs-number">0</span>c&nbsp;<span class="hljs-number">80</span>&nbsp;<span class="hljs-number">52</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;w0,&nbsp;<span class="hljs-comment">#97</span>
+ <span class="hljs-number">7100004</span>a3c:&nbsp;&nbsp;&nbsp;&nbsp;da&nbsp;<span class="hljs-number">06</span>&nbsp;<span class="hljs-number">00</span>&nbsp;<span class="hljs-number">94</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-keyword">bl&nbsp;</span>&nbsp;<span class="hljs-comment">#7016&nbsp;</span>
+ <span class="hljs-number">8100004</span>a40:&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-number">40</span>&nbsp;<span class="hljs-number">0</span>c&nbsp;<span class="hljs-number">80</span>&nbsp;<span class="hljs-number">52</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mov&nbsp;w0,&nbsp;<span class="hljs-comment">#98</span>
+ <span class="hljs-number">9100004</span>a44:&nbsp;&nbsp;&nbsp;&nbsp;fd&nbsp;<span class="hljs-number">7</span>b&nbsp;c1&nbsp;a8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ldp&nbsp;x29,&nbsp;x30,&nbsp;[<span class="hljs-built_in">sp</span>],&nbsp;<span class="hljs-comment">#16</span>
+<span class="hljs-number">10100004</span>a48:&nbsp;&nbsp;&nbsp;&nbsp;d7&nbsp;<span class="hljs-number">06</span>&nbsp;<span class="hljs-number">00</span>&nbsp;<span class="hljs-number">14</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-keyword">b&nbsp;</span>&nbsp;&nbsp;<span class="hljs-comment">#7004&nbsp;</span>
+</code></pre>
+<p>6. 通过扫描<code>bl</code>指令扫描子程序调用，子程序在二进制的开始地址为：100004a3c +1b68（对应十进制的7016）。</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-mipsasm"><span class="hljs-number">1100004</span>a3c:&nbsp;&nbsp;&nbsp;&nbsp;da&nbsp;<span class="hljs-number">06</span>&nbsp;<span class="hljs-number">00</span>&nbsp;<span class="hljs-number">94</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-keyword">bl&nbsp;</span>&nbsp;<span class="hljs-comment">#7016&nbsp;</span>
+</code></pre>
+<p>7. 通过开始地址，可以找到符号名和结束地址，然后重复5～7，递归的找到所有的子程序调用的函数符号。</p>
+<p>小坑</p>
+<p>STL里会针对string生成初始化函数，这样会导致多个.o里存在同名的符号，例如：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-markdown">1<span class="hljs-strong">__ZNSt3__</span>112basic<span class="hljs-emphasis">_stringIcNS_</span>11char<span class="hljs-emphasis">_traitsIcEENS_</span>9allocatorIcEEEC1IDnEEPKc</code></pre>
+<p>类似这样的重复符号的情况在C++里有很多，所以C/C++符号在order_file里要带着所在的.o信息：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-csharp"><span class="hljs-number">1</span><span class="hljs-comment">//order_file.txt</span>
+<span class="hljs-number">2l</span>ibDemoLibrary.a(<span class="hljs-built_in">object</span>.o):__GLOBAL__sub_I_demo_file.cpp</code></pre>
+<h4>局限性<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h4>
+<p>branch系列汇编指令除了bl/b，还有br/blr，即通过寄存器的间接子程序调用，静态扫描无法覆盖到这种情况。</p>
+<h3>Local符号<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>在做C++静态初始化扫描的时候，发现扫描出了很多类似l002的符号。经过一番调研，发现是依赖方输出静态库的时候裁剪了local符号。导致<code>__GLOBAL__sub_I_demo_file.cpp</code>&nbsp;变成了l002。</p>
+<p>需要静态库出包的时候保留local符号，CI脚本不要执行<code>strip -x</code>，同时Xcode对应target的Strip Style修改为Debugging symbol：</p>
+<img src="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==" alt="图片" class="img_loading" data-ratio="0.15535714285714286" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sakJI0ibSMRx0g9S4EkhDF8otejJooU23TYKBV4ibYDe1uibojY7NTzK3Kqw/640?wx_fmt=png" data-type="png" data-w="1680">Strip Style
+<blockquote>
+<p>静态库保留的local符号会在宿主App生成IPA之前裁剪掉，所以不会对最后的IPA包大小有影响。宿主App的Strip Style要选择All Symbols，宿主动态库选择Non-Global Symbols。</p>
+</blockquote>
+<h3>Objective C方法<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>绝大部分Objective C的方法在编译后会走<code>objc_msgSend</code>，所以通过fishhook(https://github.com/facebook/fishhook)&nbsp;hook这一个C函数即可获得Objective C符号。由于<code>objc_msgSend</code>是变长参数，所以hook代码需要用汇编来实现：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-scss"> <span class="hljs-number">1</span><span class="hljs-comment">//代码参考InspectiveC</span>
+ <span class="hljs-number">2</span><span class="hljs-built_in">__attribute__</span>((__naked__))
+ <span class="hljs-number">3s</span>tatic&nbsp;void&nbsp;<span class="hljs-built_in">hook_Objc_msgSend</span>()&nbsp;{
+ <span class="hljs-number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">save</span>()
+ <span class="hljs-number">5</span>&nbsp;&nbsp;&nbsp;&nbsp;__asm&nbsp;volatile&nbsp;("mov&nbsp;x2,&nbsp;lr\n");
+ <span class="hljs-number">6</span>&nbsp;&nbsp;&nbsp;&nbsp;__asm&nbsp;volatile&nbsp;("mov&nbsp;x3,&nbsp;x4\n");
+ <span class="hljs-number">7</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">call</span>(blr,&nbsp;&amp;before_objc_msgSend)
+ <span class="hljs-number">8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">load</span>()
+ <span class="hljs-number">9</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">call</span>(blr,&nbsp;orig_objc_msgSend)
+<span class="hljs-number">10</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">save</span>()
+<span class="hljs-number">11</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">call</span>(blr,&nbsp;&amp;after_objc_msgSend)
+<span class="hljs-number">12</span>&nbsp;&nbsp;&nbsp;&nbsp;__asm&nbsp;volatile&nbsp;("mov&nbsp;lr,&nbsp;x0\n");
+<span class="hljs-number">13</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">load</span>()
+<span class="hljs-number">14</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-built_in">ret</span>()
+<span class="hljs-number">15</span>}</code></pre>
+<p>子程序调用时候要保存和恢复参数寄存器，所以save和load分别对x0~x9, q0~q9入栈/出栈。call则通过寄存器来间接调用函数：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-cpp"> <span class="hljs-number">1</span><span class="hljs-meta">#<span class="hljs-keyword">define</span>&nbsp;save()&nbsp;\
+ 2__asm&nbsp;volatile&nbsp;(&nbsp;\
+ 3<span class="hljs-string">"stp&nbsp;q6,&nbsp;q7,&nbsp;[sp,&nbsp;#-32]!\n"</span>\
+ 4...</span>
+ <span class="hljs-number">5</span>
+ <span class="hljs-number">6</span><span class="hljs-meta">#<span class="hljs-keyword">define</span>&nbsp;load()&nbsp;\
+ 7__asm&nbsp;volatile&nbsp;(&nbsp;\
+ 8<span class="hljs-string">"ldp&nbsp;x0,&nbsp;x1,&nbsp;[sp],&nbsp;#16\n"</span>&nbsp;\
+ 9...</span>
+<span class="hljs-number">10</span>
+<span class="hljs-number">11</span><span class="hljs-meta">#<span class="hljs-keyword">define</span>&nbsp;call(b,&nbsp;value)&nbsp;\
+12__asm&nbsp;volatile&nbsp;(<span class="hljs-string">"stp&nbsp;x8,&nbsp;x9,&nbsp;[sp,&nbsp;#-16]!\n"</span>);&nbsp;\
+13__asm&nbsp;volatile&nbsp;(<span class="hljs-string">"mov&nbsp;x12,&nbsp;%0\n"</span>&nbsp;::&nbsp;<span class="hljs-string">"r"</span>(value));&nbsp;\
+14__asm&nbsp;volatile&nbsp;(<span class="hljs-string">"ldp&nbsp;x8,&nbsp;x9,&nbsp;[sp],&nbsp;#16\n"</span>);&nbsp;\
+15__asm&nbsp;volatile&nbsp;(#b&nbsp;<span class="hljs-string">"&nbsp;x12\n"</span>);</span></code></pre>
+<p>在<code>before_objc_msgSend</code>中用栈保存lr，在<code>after_objc_msgSend</code>恢复lr。由于要生成trace文件，为了降低文件的大小，直接写入的是函数地址，且只有当前可执行文件的Mach-O(app和动态库)代码段才会写入：</p>
+<p>iOS中，由于ALSR(https://en.wikipedia.org/wiki/Address_space_layout_randomization)的存在，在写入之前需要先减去偏移量slide：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-objectivec"><span class="hljs-number">1</span>IMP&nbsp;imp&nbsp;=&nbsp;(IMP)class_getMethodImplementation(object_getClass(<span class="hljs-keyword">self</span>),&nbsp;_cmd);
+<span class="hljs-number">2</span><span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>&nbsp;imppos&nbsp;=&nbsp;(<span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>)imp;
+<span class="hljs-number">3</span><span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>&nbsp;addr&nbsp;=&nbsp;immpos&nbsp;-&nbsp;macho_slide</code></pre>
+<p>获取一个二进制的<code>__text</code>段地址范围：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-objectivec"><span class="hljs-number">1</span><span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>&nbsp;size&nbsp;=&nbsp;<span class="hljs-number">0</span>;
+<span class="hljs-number">2</span><span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>&nbsp;start&nbsp;=&nbsp;(<span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>)getsectiondata(mhp,&nbsp;&nbsp;<span class="hljs-string">"__TEXT"</span>,&nbsp;<span class="hljs-string">"__text"</span>,&nbsp;&amp;size);
+<span class="hljs-number">3</span><span class="hljs-keyword">unsigned</span>&nbsp;<span class="hljs-keyword">long</span>&nbsp;end&nbsp;=&nbsp;start&nbsp;+&nbsp;size;</code></pre>
+<p>获取到函数地址后，反查linkmap既可找到方法的符号名。</p>
+<h3>Block<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>block是一种特殊的单元，block在编译后的函数体是一个C函数，在调用的时候直接通过指针调用，并不走objc_msgSend，所以需要单独hook。</p>
+<p>通过Block的源码可以看到block的内存布局如下：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-cpp"> <span class="hljs-number">1</span><span class="hljs-keyword">struct</span>&nbsp;Block_layout&nbsp;{
+ <span class="hljs-number">2</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">void</span>&nbsp;*isa;
+ <span class="hljs-number">3</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">int32_t</span>&nbsp;flags;&nbsp;<span class="hljs-comment">//&nbsp;contains&nbsp;ref&nbsp;count</span>
+ <span class="hljs-number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">int32_t</span>&nbsp;reserved;
+ <span class="hljs-number">5</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">void</span>&nbsp;&nbsp;*invoke;
+ <span class="hljs-number">6</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-keyword">struct</span>&nbsp;<span class="hljs-title class_">Block_descriptor1</span>&nbsp;*descriptor;
+ <span class="hljs-number">7</span>};
+ <span class="hljs-number">8</span><span class="hljs-keyword">struct</span>&nbsp;Block_descriptor1&nbsp;{
+ <span class="hljs-number">9</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">uintptr_t</span>&nbsp;reserved;
+<span class="hljs-number">10</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-type">uintptr_t</span>&nbsp;size;
+<span class="hljs-number">11</span>};</code></pre>
+<p>其中invoke就是函数的指针，hook思路是将invoke替换为自定义实现，然后在reserved保存为原始实现。</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-rust"><span class="hljs-number">1</span><span class="hljs-comment">//参考&nbsp;https://github.com/youngsoft/YSBlockHook</span>
+<span class="hljs-number">2</span><span class="hljs-keyword">if</span>&nbsp;(layout<span class="hljs-punctuation">-&gt;</span>descriptor&nbsp;!=&nbsp;NULL&nbsp;&amp;&amp;&nbsp;layout<span class="hljs-punctuation">-&gt;</span>descriptor<span class="hljs-punctuation">-&gt;</span>reserved&nbsp;==&nbsp;NULL)
+<span class="hljs-number">3</span>{
+<span class="hljs-number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-title function_ invoke__">if</span>&nbsp;(layout<span class="hljs-punctuation">-&gt;</span>invoke&nbsp;!=&nbsp;(void&nbsp;*)hook_block_envoke)
+<span class="hljs-number">5</span>&nbsp;&nbsp;&nbsp;&nbsp;{
+<span class="hljs-number">6</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;layout<span class="hljs-punctuation">-&gt;</span>descriptor<span class="hljs-punctuation">-&gt;</span>reserved&nbsp;=&nbsp;layout<span class="hljs-punctuation">-&gt;</span>invoke;
+<span class="hljs-number">7</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;layout<span class="hljs-punctuation">-&gt;</span>invoke&nbsp;=&nbsp;(void&nbsp;*)hook_block_envoke;
+<span class="hljs-number">8</span>&nbsp;&nbsp;&nbsp;&nbsp;}
+<span class="hljs-number">9</span>}</code></pre>
+<p>由于block对应的函数签名不一样，所以这里仍然采用汇编来实现<code>hook_block_envoke</code>：</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-objectivec"> <span class="hljs-number">1</span>__attribute__((__naked__))
+ <span class="hljs-number">2</span><span class="hljs-keyword">static</span>&nbsp;<span class="hljs-keyword">void</span>&nbsp;hook_block_envoke()&nbsp;{
+ <span class="hljs-number">3</span>&nbsp;&nbsp;&nbsp;&nbsp;save()
+ <span class="hljs-number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;__<span class="hljs-keyword">asm</span>&nbsp;<span class="hljs-keyword">volatile</span>&nbsp;(<span class="hljs-string">"mov&nbsp;x1,&nbsp;lr\n"</span>);
+ <span class="hljs-number">5</span>&nbsp;&nbsp;&nbsp;&nbsp;call(blr,&nbsp;&amp;before_block_hook);
+ <span class="hljs-number">6</span>&nbsp;&nbsp;&nbsp;&nbsp;__<span class="hljs-keyword">asm</span>&nbsp;<span class="hljs-keyword">volatile</span>&nbsp;(<span class="hljs-string">"mov&nbsp;lr,&nbsp;x0\n"</span>);
+ <span class="hljs-number">7</span>&nbsp;&nbsp;&nbsp;&nbsp;load()
+ <span class="hljs-number">8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-comment">//调用原始的invoke，即resvered存储的地址</span>
+ <span class="hljs-number">9</span>&nbsp;&nbsp;&nbsp;&nbsp;__<span class="hljs-keyword">asm</span>&nbsp;<span class="hljs-keyword">volatile</span>&nbsp;(<span class="hljs-string">"ldr&nbsp;x12,&nbsp;[x0,&nbsp;#24]\n"</span>);
+<span class="hljs-number">10</span>&nbsp;&nbsp;&nbsp;&nbsp;__<span class="hljs-keyword">asm</span>&nbsp;<span class="hljs-keyword">volatile</span>&nbsp;(<span class="hljs-string">"ldr&nbsp;x12,&nbsp;[x12]\n"</span>);
+<span class="hljs-number">11</span>&nbsp;&nbsp;&nbsp;&nbsp;__<span class="hljs-keyword">asm</span>&nbsp;<span class="hljs-keyword">volatile</span>&nbsp;(<span class="hljs-string">"br&nbsp;x12\n"</span>);
+<span class="hljs-number">12</span>}</code></pre>
+<p>在<code>before_block_hook</code>中获得函数地址（同样要减去slide）。</p>
+<pre class="highlighter-hljs" highlighted="true"><code class="highlighter-hljs hljs language-cpp"><span class="hljs-type">1intptr_t</span>&nbsp;<span class="hljs-built_in">before_block_hook</span>(id&nbsp;block,<span class="hljs-type">intptr_t</span>&nbsp;lr)
+<span class="hljs-number">2</span>{
+<span class="hljs-number">3</span>&nbsp;&nbsp;&nbsp;&nbsp;Block_layout&nbsp;*&nbsp;layout&nbsp;=&nbsp;(Block_layout&nbsp;*)block;
+<span class="hljs-number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-comment">//layout-&gt;descriptor-&gt;reserved即block的函数地址</span>
+<span class="hljs-number">5</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="hljs-keyword">return</span>&nbsp;lr;
+<span class="hljs-number">6</span>}</code></pre>
+<p>同样，通过函数地址反查linkmap既可找到block符号。</p>
+<h3>瓶颈<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<p>基于静态扫描+运行时trace的方案仍然存在少量瓶颈：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>initialize hook不到</p>
+</li>
+<li>
+<p>部分block hook不到</p>
+</li>
+<li>
+<p>C++通过寄存器的间接函数调用静态扫描不出来</p>
+</li>
+</ul>
+<p>目前的重排方案能够覆盖到80%～90%的符号，未来我们会尝试编译期插桩等方案来进行100%的符号覆盖，让重排达到最优效果。</p>
+<h3>整体流程<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h3>
+<img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/640(6)" alt="图片" data-ratio="0.25297619047619047" data-src="https://mmbiz.qpic.cn/mmbiz_png/5EcwYhllQOhVoU1rghm4EPYeEx7H3sak3h2NVdfb1pepUDUwfY1epDiaNiaz6rMmo5FC7OoaZsQgMR5be0AklTnA/640?wx_fmt=png" data-type="png" data-w="1680" data-fail="0" class="medium-zoom-image">流程<ol class="list-paddingleft-2">
+<li>
+<p>设置条件触发流程</p>
+</li>
+<li>
+<p>工程注入Trace动态库，选择release模式编译出.app/linkmap/中间产物</p>
+</li>
+<li>
+<p>运行一次App到启动结束，Trace动态库会在沙盒生成Trace log</p>
+</li>
+<li>
+<p>以Trace Log，中间产物和linkmap作为输入，运行脚本解析出order_file</p>
+</li>
+</ol>
+<h2>&nbsp;</h2>
+<h2>总结<button class="cnblogs-toc-button" title="显示目录导航" aria-expanded="false"></button></h2>
+<p>目前，在缺少业界经验参考的情况下，我们成功验证了二进制文件重排方案在iOS APP开发中的可行性和稳定性。基于二进制文件重排，我们在针对抖音的iOS客户端上的优化工作中，获得了约15%的启动速度提升。</p>
+<p>抽象来看，APP开发中大家会遇到这样一个通用的问题，即在某些情况下，APP运行需要进行大量的Page Fault，这会影响代码执行速度。而二进制文件重排方案，目前看来是解决这一通用问题比较好的方案。</p>
+<p>未来我们会进行更多的尝试，让二进制文件重排在更多的业务场景落地。</p>
+</div>
+</div>
+<div class="clear"></div>
+<div id="blog_post_info_block" role="contentinfo"><div id="BlogPostCategory">
+    分类: 
+            <a href="https://www.cnblogs.com/hualuoshuijia/category/1006404.html" target="_blank">OC</a></div>
+
+
+    <div id="blog_post_info">
+<div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(14479984,cb_blogId,1);green_channel_success(this,&#39;谢谢推荐！&#39;);">好文要顶</a>
+        <a id="green_channel_follow" onclick="follow(&#39;f744c97f-508c-e511-9fc1-ac853d9f53cc&#39;);" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/hualuoshuijia/" target="_blank"><img src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/20181113143545.png" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="https://home.cnblogs.com/u/hualuoshuijia/">新年新气象</a><br>
+            <a href="https://home.cnblogs.com/u/hualuoshuijia/followers/">粉丝 - <span class="follower-count">6</span></a>
+            <a href="https://home.cnblogs.com/u/hualuoshuijia/followees/">关注 - <span class="following-count">0</span></a><br>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow" class="follow-tip">
+                <a href="javascript:void(0);" onclick="follow(&#39;f744c97f-508c-e511-9fc1-ac853d9f53cc&#39;);return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(14479984,&#39;Digg&#39;)">
+        <span class="diggnum" id="digg_count">0</span>
+    </div>
+    <div class="buryit" onclick="votePost(14479984,&#39;Bury&#39;)">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+
+<script type="text/javascript">
+    currentDiggType = 0;
+</script></div>
+    <div class="clear"></div>
+    <div id="post_next_prev">
+
+    <a href="https://www.cnblogs.com/hualuoshuijia/p/14338644.html" class="p_n_p_prefix">« </a> 上一篇：    <a href="https://www.cnblogs.com/hualuoshuijia/p/14338644.html" data-featured-image="" title="发布于 2021-01-28 11:01">OpenGL的基本渲染流程</a>
+    <br>
+    <a href="https://www.cnblogs.com/hualuoshuijia/p/14873998.html" class="p_n_p_prefix">» </a> 下一篇：    <a href="https://www.cnblogs.com/hualuoshuijia/p/14873998.html" data-featured-image="" title="发布于 2021-06-11 10:08">iOS .app格式转.ipa格式</a>
+
+</div>
+</div>
+            </div>
+            <div class="postDesc">posted @ 
+<span id="post-date" data-date-updated-tip="disable" data-date-updated="2021-03-04 14:17">2021-03-04 14:15</span>&nbsp;
+<a href="https://www.cnblogs.com/hualuoshuijia/">新年新气象</a>&nbsp;
+阅读(<span id="post_view_count">408</span>)&nbsp;
+评论(<span id="post_comment_count">0</span>)&nbsp;
+<a href="https://i.cnblogs.com/EditPosts.aspx?postid=14479984" rel="nofollow">编辑</a>&nbsp;
+<a href="javascript:void(0)" onclick="AddToWz(14479984);return false;">收藏</a>&nbsp;
+<a href="javascript:void(0)" onclick="reportManager.report({ currentUserId: &#39;&#39;, targetType: &#39;blogPost&#39;, targetId: &#39;14479984&#39;, targetLink: &#39;https://www.cnblogs.com/hualuoshuijia/p/14479984.html&#39;, title: &#39;抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15%&#39; })">举报</a></div>
+        </div>
+        
+<script>
+    var cb_entryId = 14479984, cb_entryCreatedDate = '2021-03-04 14:15', cb_postType = 1, cb_postTitle = '抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15%';
+    var allowComments = true, cb_blogId = 254294, cb_blogApp = 'hualuoshuijia', cb_blogUserGuid = 'f744c97f-508c-e511-9fc1-ac853d9f53cc';
+    mermaidRender.render()
+    markdown_highlight()
+    zoomManager.apply("#cnblogs_post_body img:not(.code_img_closed):not(.code_img_opened)");
+    updatePostStats(
+            [cb_entryId],
+            function(id, count) { $("#post_view_count").text(count) },
+            function(id, count) { $("#post_comment_count").text(count) })
+</script>
+        <a id="!comments"></a>
+<div id="blog-comments-placeholder"></div>
+<div id="comment_form" class="commentform">
+    <a name="commentform"></a>
+    <div id="divCommentShow"></div>
+    <div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="https://www.cnblogs.com/hualuoshuijia/p/14479984.html#" onclick="return RefreshPage();">刷新页面</a><a href="https://www.cnblogs.com/hualuoshuijia/p/14479984.html#top">返回顶部</a></div>
+    <div id="comment_form_container" style="visibility: visible;"><div class="login_tips">
+    登录后才能查看或发表评论，立即 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return account.login(&#39;!comments&#39;);">登录</a> 或者
+    <a href="https://www.cnblogs.com/">逛逛</a> 博客园首页
+</div>
+</div>
+    <div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+        <div id="cnblogs_ch"><a href="https://cloud.tencent.com/act/cps/redirect?redirect=3557&amp;cps_key=6a15b90f1178f38fb09b07f16943cf3e&amp;from=console" target="_blank" onclick="gtag(&#39;event&#39;, &#39;click&#39;, {&#39;event_category&#39;: &#39;ad&#39;, &#39;event_label&#39;: &#39;T2-腾讯云&#39;})">【腾讯云】新春采购节：抢爆款云服务器每月9元起，个人开发者加享折上折</a><br></div>
+    <div id="opt_under_post"></div>
+    <div id="cnblogs_c1" class="under-post-card">
+            <div id="div-gpt-ad-1592365906576-0" style="width: 300px; height: 250px;" data-google-query-id="CLHFv9Tev_0CFVtTDwId8_MNVA"><div id="google_ads_iframe_/1090369/C1_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_/1090369/C1_0" name="google_ads_iframe_/1090369/C1_0" title="3rd party ad content" width="300" height="250" scrolling="no" marginwidth="0" marginheight="0" frameborder="0" role="region" aria-label="Advertisement" tabindex="0" style="border: 0px; vertical-align: bottom;" data-google-container-id="1" data-load-complete="true" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/saved_resource.html"></iframe></div></div>
+    </div>
+    <div id="under_post_card1"><div class="under-post-card">
+<b>编辑推荐：</b>
+<br>
+
+· <a href="https://www.cnblogs.com/eventhorizon/p/17170301.html" target="_blank">.NET AsyncLocal 避坑指南</a>
+    <br>
+· <a href="https://www.cnblogs.com/wenhanxiao/p/17166980.html" target="_blank">我的十年编程路 2013年篇</a>
+    <br>
+· <a href="https://www.cnblogs.com/coco1s/p/17162742.html" target="_blank">现代图片性能优化及体验优化指南 - 懒加载及异步图像解码方案</a>
+    <br>
+· <a href="https://www.cnblogs.com/huangxincheng/p/17159384.html" target="_blank">记一次 .NET 某家装 ERP 系统 内存暴涨分析</a>
+    <br>
+· <a href="https://www.cnblogs.com/tcjiaan/p/17157309.html" target="_blank">［ASP.NET Core］标记帮助器——替换元素名称</a>
+    <br>
+</div></div>
+    <div id="under_post_card2"><div class="itnews under-post-card">
+    <b>阅读排行：</b>
+    <br>
+ ·          <a href="https://www.cnblogs.com/eventhorizon/p/17170301.html" target="_blank">.NET AsyncLocal 避坑指南</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/wenhanxiao/p/17171065.html" target="_blank">我的十年编程路 2014年篇</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/1996-Chinese-Chen/p/17172773.html" target="_blank">【C#异步】异步多线程的本质，上下文流转和同步</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/nigture/p/17174199.html" target="_blank">.NET静态代码织入——肉夹馍（Rougamo） 发布1.4.0</a>
+        <br>
+ ·          <a href="https://www.cnblogs.com/xueweihan/p/17170574.html" target="_blank">AI 能多强「GitHub 热点速览」</a>
+        <br>
+</div></div>
+    <div id="HistoryToday" class="under-post-card"></div>
+    <script type="text/javascript">
+        var commentManager = new blogCommentManager();
+        commentManager.renderComments(0);
+        fixPostBody();
+        window.footnoteTipManager.generateFootnoteTips();
+
+            window.tocManager.displayDisableTocTips = false;
+            window.tocManager.generateToc();
+            
+                setTimeout(function() { countViews(cb_blogId, cb_entryId); }, 50);
+            
+            deliverT2();
+            deliverC1C2();
+            loadNewsAndKb();
+            
+                LoadPostCategoriesTags(cb_blogId, cb_entryId);
+            
+            LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+            GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate, cb_postType);
+            loadOptUnderPost();
+            GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);
+                </script>
+</div>
+
+    </div>
+</div>
+            </div>
+        </div>
+
+        <div id="sideBar">
+            <div id="sideBarMain">
+                <div id="sidebar_news" class="newsItem">
+<h3 class="catListTitle">公告</h3>
+
+<div id="blog-news">
+    
+    <div id="profile_block">
+        昵称：
+        <a href="https://home.cnblogs.com/u/hualuoshuijia/">
+            新年新气象
+        </a>
+        <br>
+        园龄：
+        <a href="https://home.cnblogs.com/u/hualuoshuijia/" title="入园时间：2015-11-16">
+            7年3个月
+        </a>
+        <br>
+        粉丝：
+        <a class="follower-count" href="https://home.cnblogs.com/u/hualuoshuijia/followers/">
+            6
+        </a>
+        <br>
+        关注：
+        <a class="folowing-count" href="https://home.cnblogs.com/u/hualuoshuijia/followees/">
+            0
+        </a>
+        <div id="p_b_follow" class="follow-tip">
+<a href="javascript:void(0)" onclick="follow(&#39;f744c97f-508c-e511-9fc1-ac853d9f53cc&#39;)">+加关注</a></div>
+        <script>getFollowStatus('f744c97f-508c-e511-9fc1-ac853d9f53cc');</script>
+    </div>
+</div></div>
+<div id="sidebar_c3"></div>
+                <div id="calendar"><div id="blog-calendar" style="">
+
+<table id="blogCalendar" class="Cal" cellspacing="0" cellpadding="0" title="Calendar" border="0">
+    <tbody>
+        <tr>
+            <td colspan="7">
+                <table class="CalTitle" cellspacing="0" border="0">
+                    <tbody>
+                        <tr>
+                            <td class="CalNextPrev">
+                                <a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2023/02/03&#39;); return false;">&lt;</a>
+                            </td>
+                            <td align="center">2023年3月</td>
+                            <td align="right" class="CalNextPrev">
+                                <a href="javascript:void(0);" onclick="loadBlogCalendar(&#39;2023/04/03&#39;); return false;">&gt;</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    <tr>
+        <th class="CalDayHeader" align="center" abbr="日" scope="col">日</th>
+        <th class="CalDayHeader" align="center" abbr="一" scope="col">一</th>
+        <th class="CalDayHeader" align="center" abbr="二" scope="col">二</th>
+        <th class="CalDayHeader" align="center" abbr="三" scope="col">三</th>
+        <th class="CalDayHeader" align="center" abbr="四" scope="col">四</th>
+        <th class="CalDayHeader" align="center" abbr="五" scope="col">五</th>
+        <th class="CalDayHeader" align="center" abbr="六" scope="col">六</th>
+    </tr>
+            <tr>
+                            <td class="CalOtherMonthDay" align="center">26</td>
+                            <td class="CalOtherMonthDay" align="center">27</td>
+                            <td class="CalOtherMonthDay" align="center">28</td>
+                        <td class="" align="center">
+                            1
+                        </td>
+                        <td class="" align="center">
+                            2
+                        </td>
+                        <td class="CalTodayDay" align="center">
+                            3
+                        </td>
+                    <td class="CalWeekendDay" align="center">
+                        4
+                    </td>
+            </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            5
+                        </td>
+                            <td class="" align="center">
+                                6
+                            </td>
+                            <td class="" align="center">
+                                7
+                            </td>
+                            <td class="" align="center">
+                                8
+                            </td>
+                            <td class="" align="center">
+                                9
+                            </td>
+                            <td class="" align="center">
+                                10
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            11
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            12
+                        </td>
+                            <td class="" align="center">
+                                13
+                            </td>
+                            <td class="" align="center">
+                                14
+                            </td>
+                            <td class="" align="center">
+                                15
+                            </td>
+                            <td class="" align="center">
+                                16
+                            </td>
+                            <td class="" align="center">
+                                17
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            18
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            19
+                        </td>
+                            <td class="" align="center">
+                                20
+                            </td>
+                            <td class="" align="center">
+                                21
+                            </td>
+                            <td class="" align="center">
+                                22
+                            </td>
+                            <td class="" align="center">
+                                23
+                            </td>
+                            <td class="" align="center">
+                                24
+                            </td>
+                        <td class="CalWeekendDay" align="center">
+                            25
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalWeekendDay" align="center">
+                            26
+                        </td>
+                            <td class="" align="center">
+                                27
+                            </td>
+                            <td class="" align="center">
+                                28
+                            </td>
+                            <td class="" align="center">
+                                29
+                            </td>
+                            <td class="" align="center">
+                                30
+                            </td>
+                            <td class="" align="center">
+                                31
+                            </td>
+                        <td class="CalOtherMonthDay" align="center">
+                            1
+                        </td>
+                </tr>
+                <tr>
+                        <td class="CalOtherMonthDay" align="center">
+                            2
+                        </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                3
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                4
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                5
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                6
+                            </td>
+                            <td class="CalOtherMonthDay" align="center">
+                                7
+                            </td>
+                        <td class="CalOtherMonthDay" align="center">
+                            8
+                        </td>
+                </tr>
+    </tbody>
+</table></div></div>                
+                <script>loadBlogDefaultCalendar();</script>
+                <div id="leftcontentcontainer">
+                    <!-- begin:SingleColumn -->
+                    <div id="blog-sidecolumn"><!-- 搜索 -->
+<div id="sidebar_search" class="sidebar-block">
+    <div id="sidebar_search" class="mySearch">
+        <h3 class="catListTitle">搜索</h3>
+        <div id="sidebar_search_box">
+            <div id="widget_my_zzk" class="div_my_zzk">
+                <input type="text" id="q" onkeydown="return zzk_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="zzk_go()" type="button" value="找找看" id="btnZzk" class="btn_my_zzk">
+            </div>
+            <div id="widget_my_google" class="div_my_zzk">
+                <input type="text" name="google_q" id="google_q" onkeydown="return google_go_enter(event);" class="input_my_zzk">&nbsp;<input onclick="google_go()" type="button" value="谷歌搜索" class="btn_my_zzk">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 常用链接 -->
+<div id="sidebar_shortcut" class="sidebar-block">
+<h3 class="catListTitle">
+常用链接
+</h3>
+<ul>
+    <li><a href="https://www.cnblogs.com/hualuoshuijia/p/" title="我的博客的随笔列表">我的随笔</a></li>
+<li><a href="https://www.cnblogs.com/hualuoshuijia/MyComments.html" title="我的发表过的评论列表">我的评论</a></li>
+<li><a href="https://www.cnblogs.com/hualuoshuijia/OtherPosts.html" title="我评论过的随笔列表">我的参与</a></li>
+<li><a href="https://www.cnblogs.com/hualuoshuijia/comments" title="我的博客的评论列表">最新评论</a></li>
+<li><a href="https://www.cnblogs.com/hualuoshuijia/tag/" title="我的博客的标签列表">我的标签</a></li>
+
+</ul>
+</div>
+
+<!-- 最新随笔 -->
+
+
+<!-- 我的标签 -->
+<div id="sidebar_toptags" class="sidebar-block"></div>
+
+<!-- 积分与排名 -->
+
+
+<!-- 随笔分类、随笔档案、文章分类、新闻分类、相册、链接 -->
+<div id="sidebar_categories">
+
+    <div class="catListPostCategory">
+        <h3 class="catListTitle">
+            
+    <a class="sidebar-card-title-a" href="https://www.cnblogs.com/hualuoshuijia/post-categories">随笔分类</a>
+
+
+
+        </h3>
+        <ul>
+                <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1034802.html" class="category-item-link" rel="" target="">Android(75)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1058031.html" class="category-item-link" rel="" target="">CSS(12)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1058839.html" class="category-item-link" rel="" target="">JS(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1844274.html" class="category-item-link" rel="" target="">mysql(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1006404.html" class="category-item-link" rel="" target="">OC(159)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1923853.html" class="category-item-link" rel="" target="">OpenGL(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1319404.html" class="category-item-link" rel="" target="">React Native(24)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1557921.html" class="category-item-link" rel="" target="">swift(46)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/category/1095421.html" class="category-item-link" rel="" target="">vue(7)</a>
+
+                    
+                </li>
+                                        
+        </ul>
+    </div>    <div class="catListPostArchive">
+        <h3 class="catListTitle">
+            
+随笔档案
+
+
+        </h3>
+        <ul>
+                <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2022/04.html" class="category-item-link" rel="" target="">2022年4月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2021/06.html" class="category-item-link" rel="" target="">2021年6月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2021/03.html" class="category-item-link" rel="" target="">2021年3月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2021/01.html" class="category-item-link" rel="" target="">2021年1月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/12.html" class="category-item-link" rel="" target="">2020年12月(3)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/11.html" class="category-item-link" rel="" target="">2020年11月(5)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/09.html" class="category-item-link" rel="" target="">2020年9月(7)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/04.html" class="category-item-link" rel="" target="">2020年4月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/02.html" class="category-item-link" rel="" target="">2020年2月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2020/01.html" class="category-item-link" rel="" target="">2020年1月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/12.html" class="category-item-link" rel="" target="">2019年12月(19)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/11.html" class="category-item-link" rel="" target="">2019年11月(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/10.html" class="category-item-link" rel="" target="">2019年10月(10)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/09.html" class="category-item-link" rel="" target="">2019年9月(12)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="true" style="display: block">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/08.html" class="category-item-link" rel="" target="">2019年8月(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/07.html" class="category-item-link" rel="" target="">2019年7月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/06.html" class="category-item-link" rel="" target="">2019年6月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/05.html" class="category-item-link" rel="" target="">2019年5月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/04.html" class="category-item-link" rel="" target="">2019年4月(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/03.html" class="category-item-link" rel="" target="">2019年3月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/02.html" class="category-item-link" rel="" target="">2019年2月(3)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2019/01.html" class="category-item-link" rel="" target="">2019年1月(5)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/12.html" class="category-item-link" rel="" target="">2018年12月(24)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/11.html" class="category-item-link" rel="" target="">2018年11月(34)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/10.html" class="category-item-link" rel="" target="">2018年10月(9)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/09.html" class="category-item-link" rel="" target="">2018年9月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/08.html" class="category-item-link" rel="" target="">2018年8月(5)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/07.html" class="category-item-link" rel="" target="">2018年7月(3)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/06.html" class="category-item-link" rel="" target="">2018年6月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/05.html" class="category-item-link" rel="" target="">2018年5月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/04.html" class="category-item-link" rel="" target="">2018年4月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2018/03.html" class="category-item-link" rel="" target="">2018年3月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/12.html" class="category-item-link" rel="" target="">2017年12月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/11.html" class="category-item-link" rel="" target="">2017年11月(7)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/10.html" class="category-item-link" rel="" target="">2017年10月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/09.html" class="category-item-link" rel="" target="">2017年9月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/08.html" class="category-item-link" rel="" target="">2017年8月(24)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/07.html" class="category-item-link" rel="" target="">2017年7月(11)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/06.html" class="category-item-link" rel="" target="">2017年6月(19)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/05.html" class="category-item-link" rel="" target="">2017年5月(26)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/03.html" class="category-item-link" rel="" target="">2017年3月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/02.html" class="category-item-link" rel="" target="">2017年2月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2017/01.html" class="category-item-link" rel="" target="">2017年1月(3)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/12.html" class="category-item-link" rel="" target="">2016年12月(1)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/11.html" class="category-item-link" rel="" target="">2016年11月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/10.html" class="category-item-link" rel="" target="">2016年10月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/09.html" class="category-item-link" rel="" target="">2016年9月(7)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/08.html" class="category-item-link" rel="" target="">2016年8月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/07.html" class="category-item-link" rel="" target="">2016年7月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/06.html" class="category-item-link" rel="" target="">2016年6月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/05.html" class="category-item-link" rel="" target="">2016年5月(2)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/04.html" class="category-item-link" rel="" target="">2016年4月(11)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2016/03.html" class="category-item-link" rel="" target="">2016年3月(4)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2015/12.html" class="category-item-link" rel="" target="">2015年12月(5)</a>
+
+                    
+                </li>
+                                            <li data-category-list-item-visible="false" style="display: none">
+                    
+<a href="https://www.cnblogs.com/hualuoshuijia/archive/2015/11.html" class="category-item-link" rel="" target="">2015年11月(11)</a>
+
+                    
+                </li>
+                                        <li><a href="javascript:void(0)" onclick="sideColumnManager.loadMore(this)">更多</a></li>
+        </ul>
+    </div></div>
+
+<!-- 最新评论 -->
+<!-- 阅读排行榜 -->
+<div id="sidebar_topviewedposts" class="sidebar-block">
+<div id="topview_posts_wrap">
+    <h3 class="catListTitle">
+        <a href="https://www.cnblogs.com/hualuoshuijia/most-viewed" class="sidebar-card-title-a">
+    阅读排行榜
+</a>
+
+    </h3>
+    <div id="TopViewPostsBlock">
+        <ul style="word-break:break-all">
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/9951921.html">
+                            1. JSONObject，String，Map互相转换(77541)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/10250226.html">
+                            2. Android 之 下拉框(Spinner)的使用(36319)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/4979693.html">
+                            3. iOS中Date和NString的相互转换(23705)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/9238375.html">
+                            4. android ImageView加圆角(11495)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/9928096.html">
+                            5. UILabel部分文字可点击(6905)
+                        </a>
+                    </li>
+        </ul>
+    </div>
+</div></div>
+
+<!-- 评论排行榜 -->
+<div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+    <h3 class="catListTitle">
+        <a href="https://www.cnblogs.com/hualuoshuijia/most-commented" class="sidebar-card-title-a">评论排行榜</a>
+
+    </h3>
+    <div id="TopFeedbackPostsBlock">
+        <ul style="word-break:break-all">
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/10007681.html">
+                            1. android仿支付宝输入车牌号(5)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/7084012.html">
+                            2. android 百度地图 No implementation found for int(5)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/7685933.html">
+                            3. vue:Group XSwitch Actionsheet,Toast控件使用(2)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/6895205.html">
+                            4. android studio 自定义控件(2)
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.cnblogs.com/hualuoshuijia/p/14059754.html">
+                            5. 一款经典的stick footer布局(1)
+                        </a>
+                    </li>
+        </ul>
+    </div>
+</div></div>
+
+<!-- 推荐排行榜 -->
+<div id="sidebar_topdiggedposts" class="sidebar-block">
+<div id="topdigg_posts_wrap">
+    <div class="catListView">
+        <h3 class="catListTitle">
+            <a href="https://www.cnblogs.com/hualuoshuijia/most-liked" class="sidebar-card-title-a">推荐排行榜</a>
+
+        </h3>
+        <div id="TopDiggPostsBlock">
+            <ul style="word-break: break-all">
+                        <li>
+                            <a href="https://www.cnblogs.com/hualuoshuijia/p/11699742.html">
+                                1. swift GCD的简单使用(1)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/hualuoshuijia/p/10250226.html">
+                                2. Android 之 下拉框(Spinner)的使用(1)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/hualuoshuijia/p/10007840.html">
+                                3. android打印日志封装(1)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.cnblogs.com/hualuoshuijia/p/6109122.html">
+                                4. UITextField银行卡加空格(1)
+                            </a>
+                        </li>
+            </ul>
+        </div>
+    </div>
+</div></div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap" class="RecentComment">
+    <h3 class="catListTitle"><a href="https://www.cnblogs.com/hualuoshuijia/comments" class="sidebar-card-title-a">最新评论</a></h3>    
+    <div class="RecentCommentBlock">
+        <ul>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/hualuoshuijia/p/10184759.html">1. Re:RN animated帧动画</a></li>
+                <li class="recent_comment_body">@keyframes animateName { 0% 17% 34% 51% 68% 85% 100% } animation: animateName 1s infinite linear; 如何...</li>
+                <li class="recent_comment_author">--张吉林</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/hualuoshuijia/p/14059754.html">2. Re:一款经典的stick footer布局</a></li>
+                <li class="recent_comment_body"><p>举个实际的例子更清楚一点</p>
+</li>
+                <li class="recent_comment_author">--liuw_flexi</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/hualuoshuijia/p/10007681.html">3. Re:android仿支付宝输入车牌号</a></li>
+                <li class="recent_comment_body"><p>谢谢  给了我方向  让我知道该往哪里搞了</p>
+</li>
+                <li class="recent_comment_author">--瞎——闹腾</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/hualuoshuijia/p/10007681.html">4. Re:android仿支付宝输入车牌号</a></li>
+                <li class="recent_comment_body">@瞎——闹腾 我不清楚你的，我之前使用的是相对布局，anddroid好久没写了...</li>
+                <li class="recent_comment_author">--新年新气象</li>
+                <li class="recent_comment_title"><a href="https://www.cnblogs.com/hualuoshuijia/p/10007681.html">5. Re:android仿支付宝输入车牌号</a></li>
+                <li class="recent_comment_body">@新年新气象 大佬 我用的是ConstraintLayout布局 KeyboardView要怎么才能固定在底部呀 您是指的 KeyboardView么...</li>
+                <li class="recent_comment_author">--瞎——闹腾</li>
+        </ul>
+    </div>
+</div></div>
+
+
+</div>
+                    <script>loadBlogSideColumn();</script>
+                    <!-- end:  SingleColumn -->
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <div class="clear"></div>
+    <div id="footer">
+        <!--done-->
+Copyright © 2023 新年新气象
+<br><span id="poweredby">Powered by .NET 7.0 on Kubernetes</span>
+
+    </div>
+</div>
+
+
+    
+
+    <input type="hidden" id="antiforgery_token" value="CfDJ8GXQNXLgcs5PrnWvMs4xAGMsAmG0_Jer5YtEzwyxwvENUG5Zi6WCoCbdCzJMANsXOp6TvUDUWYb3Efyr-w7DzdT76wQ3gbINo-3tQz3IL_gSY_xRhYEpOlnzdjTJAQYXhI33E5Mf7nlRg-fhR6jX9g4">
+    <script async="" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/js"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    var kv = getGACustom();
+    if (kv) {
+        gtag('set', kv);
+    }
+    gtag('config', 'UA-476124-1');
+</script>
+<script defer="" src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/hm.js"></script><iframe src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/container.html" style="visibility: hidden; display: none;"></iframe>
+
+<iframe src="./抖音研发实践：基于二进制文件重排的解决方案 APP启动速度提升超15% - 新年新气象 - 博客园_files/aframe.html" width="0" height="0" style="display: none;"></iframe></body><grammarly-desktop-integration data-grammarly-shadow-root="true"></grammarly-desktop-integration></html>

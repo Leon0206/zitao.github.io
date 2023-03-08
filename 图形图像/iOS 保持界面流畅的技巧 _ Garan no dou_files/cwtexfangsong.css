@@ -1,0 +1,13 @@
+/*
+ * cwTeXFangSong (Chinese Traditional) http://www.google.com/fonts/earlyaccess
+ */
+@font-face {
+  font-family: 'cwTeXFangSong';
+  font-style: normal;
+  font-weight: 500;
+  src: url(//gstatic.loli.net/ea/cwtexfangsong/v3/cwTeXFangSong-zhonly.eot);
+  src: url(//gstatic.loli.net/ea/cwtexfangsong/v3/cwTeXFangSong-zhonly.eot?#iefix) format('embedded-opentype'),
+       url(//gstatic.loli.net/ea/cwtexfangsong/v3/cwTeXFangSong-zhonly.woff2) format('woff2'),
+       url(//gstatic.loli.net/ea/cwtexfangsong/v3/cwTeXFangSong-zhonly.woff) format('woff'),
+       url(//gstatic.loli.net/ea/cwtexfangsong/v3/cwTeXFangSong-zhonly.ttf) format('truetype');
+}
