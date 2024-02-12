@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="It will take about 3 minutes to finish reading this article. Here is a summary of all the possible reasons for publishing failure in Hexo. Note: The steps in this article are based on the request bein">
+<meta property="og:type" content="article">
+<meta property="og:title" content="01. Common Http Protocol Operation Methods">
+<meta property="og:url" content="https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/">
+<meta property="og:site_name" content="iOS Hunter Notes">
+<meta property="og:description" content="It will take about 3 minutes to finish reading this article. Here is a summary of all the possible reasons for publishing failure in Hexo. Note: The steps in this article are based on the request bein">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2023-12-20T21:25:00.000Z">
+<meta property="article:modified_time" content="2023-12-19T21:41:21.631Z">
+<meta property="article:author" content="Zitao">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>01. Common Http Protocol Operation Methods</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/categories">Categories</a></li><!--
+     --><!--
+       --><li><a href="/tags">Tags</a></li><!--
+     --><!--
+       --><li><a href="/search">Search</a></li><!--
+     --><!--
+       --><li><a href="/archives">Archives</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li><!--
+     --><!--
+       --><li><a href="/about">Others</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2024/02/12/iOS/05.%20Projects%20&%20Issues/02.%20An%20Ideal%20High-quality%20Mobile%20Application%20Architecture/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2023/12/19/iOS/06.%20Network/00.%20What%20happens%20when%20you%20enter%20the%20URL%20in%20the%20browser%20and%20press%20Enter/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&text=01. Common Http Protocol Operation Methods"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&is_video=false&description=01. Common Http Protocol Operation Methods"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=01. Common Http Protocol Operation Methods&body=Check out this article: https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&name=01. Common Http Protocol Operation Methods&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&t=01. Common Http Protocol Operation Methods"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-General-Process"><span class="toc-number">1.</span> <span class="toc-text">1. General Process</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Detailed-Process"><span class="toc-number">2.</span> <span class="toc-text">2. Detailed Process</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reference"><span class="toc-number">3.</span> <span class="toc-text">Reference</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        01. Common Http Protocol Operation Methods
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Zitao</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2023-12-20T21:25:00.000Z" class="dt-published" itemprop="datePublished">2023-12-20</time>
+        
+        (Updated: <time datetime="2023-12-19T21:41:21.631Z" class="dt-updated" itemprop="dateModified">2023-12-19</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/iOS/">iOS</a> › <a class="category-link" href="/categories/iOS/06-Network/">06. Network</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p><font color=gray size=2><em>It will take about 3 minutes to finish reading this article.</em></font></p>
+<p>Here is a summary of all the possible reasons for publishing failure in Hexo.</p>
+<p>Note: The steps in this article are based on the request being a simple HTTP request, no HTTPS, HTTP2, the simplest DNS, no proxy, and no problems with the server, although this is impractical.</p>
+<h4 id="1-General-Process"><a href="#1-General-Process" class="headerlink" title="1. General Process"></a><font size=5 color=#4169E1>1. General Process</font></h4><p><strong>URL Parsing</strong><br><strong>DNS Query</strong><br><strong>TCP Connection</strong><br><strong>Handle Request</strong><br><strong>Accept Response</strong><br><strong>Render Page</strong>     </p>
+<h4 id="2-Detailed-Process"><a href="#2-Detailed-Process" class="headerlink" title="2. Detailed Process"></a><font size=5 color=#4169E1>2. Detailed Process</font></h4><p><font size=4><strong>2.1 URL Parsing</strong></font>  </p>
+<p>When a user enters a URL in the browser address bar, the browser first parses the URL.</p>
+<p>A URL usually consists of multiple parts, including protocol (such as http or https), domain name (such as <a target="_blank" rel="noopener" href="http://www.example.com/">www.example.com</a>), port number (default is 80 or 443), path (specify the file path on the server), query parameters ( parameters passed to the server), etc. The browser will break these parts down for subsequent operations.</p>
+<p><font size=4><strong>2.2 DNS Query</strong></font>  </p>
+<p>When parsing the URL, if the domain name part is a host name (such as <a target="_blank" rel="noopener" href="http://www.example.com/">www.example.com</a>), the browser will find the corresponding IP address through DNS (Domain Name System) resolution. </p>
+<p>DNS resolution is the process of converting a domain name into an IP address. The browser will send a domain name query request to the DNS server to obtain the server’s IP address in order to establish a connection.</p>
+<p><font size=4><strong>2.3 TCP Connection</strong></font>  </p>
+<p>Once the browser obtains the server’s IP address, it begins establishing a TCP (Transmission Control Protocol) connection to the server. </p>
+<p>TCP is a reliable transport protocol used to establish reliable data transmission connections on the network. The browser will establish a TCP connection with the specified port of the server (default is 80 or 443, depending on the protocol http or https used) for subsequent data transmission.</p>
+<p><font size=4><strong>2.4 Handle Request</strong></font>  </p>
+<p>After establishing a TCP connection, the browser sends an HTTP (Hypertext Transfer Protocol) request to the server. The HTTP request contains information related to the resource that the browser needs to obtain, such as the request method (GET, POST, etc.), resource path, query parameters, request header information, etc.</p>
+<p>After the server receives the HTTP request, it will process it according to the content of the request and return the corresponding HTTP response.</p>
+<p><font size=4><strong>2.5 Accept Response</strong></font> </p>
+<p>After the server receives the HTTP request from the browser, it will process and generate a corresponding HTTP response based on the request content. The HTTP response contains the resource content returned by the server, such as HTML files, CSS styles, JavaScript scripts, pictures, etc.</p>
+<p>After the browser receives the HTTP response from the server, it begins to parse and render the page.</p>
+<p><font size=4><strong>2.6 Render Page</strong></font> </p>
+<p>The browser parses the HTML file, builds a DOM (Document Object Model) tree, parses CSS styles and JavaScript scripts at the same time, generates a rendering tree, and synthesizes it into the final page layout.</p>
+<p>Finally, the browser displays the page content in the user’s browser window, and the user can see and interact with the page.</p>
+<h4 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a><font size=5 color=gray><em>Reference</em></font></h4><p>[1] <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/80551769">https://zhuanlan.zhihu.com/p/80551769</a><br>[2] <a target="_blank" rel="noopener" href="http://www.mobiletrain.org/about/BBS/208450.html">http://www.mobiletrain.org/about/BBS/208450.html</a></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/categories">Categories</a></li>
+        
+          <li><a href="/tags">Tags</a></li>
+        
+          <li><a href="/search">Search</a></li>
+        
+          <li><a href="/archives">Archives</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li>
+        
+          <li><a href="/about">Others</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-General-Process"><span class="toc-number">1.</span> <span class="toc-text">1. General Process</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Detailed-Process"><span class="toc-number">2.</span> <span class="toc-text">2. Detailed Process</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Reference"><span class="toc-number">3.</span> <span class="toc-text">Reference</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&text=01. Common Http Protocol Operation Methods"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&is_video=false&description=01. Common Http Protocol Operation Methods"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=01. Common Http Protocol Operation Methods&body=Check out this article: https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&title=01. Common Http Protocol Operation Methods"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&name=01. Common Http Protocol Operation Methods&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://zitao0206.github.io/2023/12/20/iOS/06.%20Network/01.%20Common%20Http%20protocol%20Operation%20methods/&t=01. Common Http Protocol Operation Methods"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2033
+    Zitao
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/categories">Categories</a></li><!--
+     --><!--
+       --><li><a href="/tags">Tags</a></li><!--
+     --><!--
+       --><li><a href="/search">Search</a></li><!--
+     --><!--
+       --><li><a href="/archives">Archives</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li><!--
+     --><!--
+       --><li><a href="/about">Others</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
