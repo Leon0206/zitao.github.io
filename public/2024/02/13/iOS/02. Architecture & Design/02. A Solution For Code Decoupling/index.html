@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="It will take about 5 minutes to finish reading this article. 1. BackgroundA common code coupling scenario is as follows:    The code in module A needs to call the method doSomething() in module B. If">
+<meta property="og:type" content="article">
+<meta property="og:title" content="02. A Solution For Code Decoupling">
+<meta property="og:url" content="https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/">
+<meta property="og:site_name" content="iOS Hunter Notes">
+<meta property="og:description" content="It will take about 5 minutes to finish reading this article. 1. BackgroundA common code coupling scenario is as follows:    The code in module A needs to call the method doSomething() in module B. If">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/000.jpg">
+<meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/001.jpg">
+<meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/002.jpg">
+<meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/003.jpg">
+<meta property="article:published_time" content="2024-02-13T15:00:00.000Z">
+<meta property="article:modified_time" content="2024-02-13T14:48:30.772Z">
+<meta property="article:author" content="Zitao">
+<meta property="article:tag" content="Code Decoupling">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/000.jpg">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>02. A Solution For Code Decoupling</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/categories">Categories</a></li><!--
+     --><!--
+       --><li><a href="/tags">Tags</a></li><!--
+     --><!--
+       --><li><a href="/search">Search</a></li><!--
+     --><!--
+       --><li><a href="/archives">Archives</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li><!--
+     --><!--
+       --><li><a href="/about">Others</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/02/12/iOS/02.%20Architecture%20&%20Design/01.%20An%20Ideal%20High-quality%20Mobile%20Application%20Architecture/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&text=02. A Solution For Code Decoupling"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&is_video=false&description=02. A Solution For Code Decoupling"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=02. A Solution For Code Decoupling&body=Check out this article: https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&name=02. A Solution For Code Decoupling&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&t=02. A Solution For Code Decoupling"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Background"><span class="toc-number">1.</span> <span class="toc-text">1. Background</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-How-to-decouple-it"><span class="toc-number">2.</span> <span class="toc-text">2. How to decouple it?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Precautions"><span class="toc-number">3.</span> <span class="toc-text">3. Precautions</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        02. A Solution For Code Decoupling
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">Zitao</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-02-13T15:00:00.000Z" class="dt-published" itemprop="datePublished">2024-02-13</time>
+        
+        (Updated: <time datetime="2024-02-13T14:48:30.772Z" class="dt-updated" itemprop="dateModified">2024-02-13</time>)
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fa-solid fa-archive"></i>
+        <a class="category-link" href="/categories/iOS/">iOS</a> › <a class="category-link" href="/categories/iOS/02-Architecture-Design/">02. Architecture & Design</a>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/Code-Decoupling/" rel="tag">Code Decoupling</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p><font color=gray size=2><em>It will take about 5 minutes to finish reading this article.</em></font></p>
+<h4 id="1-Background"><a href="#1-Background" class="headerlink" title="1. Background"></a><font size=3 color=#4169E1>1. Background</font></h4><p>A common code coupling scenario is as follows:</p>
+<img src="/assets/iOS/Architecture&Design/000.jpg" class=""> 
+
+<p>The code in module A needs to call the method doSomething() in module B. If it is called directly in A, it will cause A to have a dependency on B. Yes, most of the code dependencies in development come from this.</p>
+<h4 id="2-How-to-decouple-it"><a href="#2-How-to-decouple-it" class="headerlink" title="2. How to decouple it?"></a><font size=3 color=#4169E1>2. How to decouple it?</font></h4><p><strong>(1)</strong> We can create a protocol called BService and class BServiceImp, They store the definition and implementation of the doSomething() method respectively.  That’s right, at this time we have completely moved the doSomething() method to BServiceImp class, But usually, BServiceImp should be still at the level of business Code layer and should not be sinked.</p>
+<img src="/assets/iOS/Architecture&Design/001.jpg" class=""> 
+
+
+<p><strong>(2)</strong> Since we have created BService and BServiceImp, so, at this time, we can create a management class to manage all Protocols and ServiceImps, which is called DecoupleServiceManager. DecoupleServiceManager can help us initialize BServiceImp through the protocol BService, as shown in the following figure: </p>
+<img src="/assets/iOS/Architecture&Design/002.jpg" class=""> 
+
+<p>In the beginning, the Binding relationship between the protocol BService and class BServiceImp should be registered at an earlier stage. So when we want to call doSomething(), we can first obtain the instance of the BServiceImp with the help of Protocol BService, like that:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">id b_instance <span class="operator">=</span> (id<span class="operator">&lt;</span><span class="type">Protocol</span><span class="operator">&gt;</span>)[[<span class="type">DecoupleServiceManager</span> shared] createInstanceWithService:<span class="meta">@protocol</span>(<span class="type">BService</span>)]</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+<p><strong>(3)</strong> Let’s take a look at how the doSomething() method is finally called. As shown in the figure below, when module A calls doSomething(), it is now called through the DecoupleServiceManager instead of directly calling the code of module B. In this way, A’s dependence on B is relieved with the help of this third-party DecoupleServiceManager.</p>
+<img src="/assets/iOS/Architecture&Design/003.jpg" class=""> 
+
+<p>Note that DecoupleServiceManager and protocol BService should be stored in Common Component Layer.</p>
+<h4 id="3-Precautions"><a href="#3-Precautions" class="headerlink" title="3. Precautions"></a><font size=3 color=#4169E1>3. Precautions</font></h4><p>(1) The Binding relationship between the protocol BService and class BServiceImp can be stored in a plist file, when the app starts, DecoupleServiceManager should be launched, and all of the binding relationships must be registered into DecoupleServiceManager.</p>
+<p>(2) I should let you know that, this method of code decoupling has a disadvantage. Because BServiceImp is found through the protocol BService and the doSomething() method is called in it, this process will span the code level (business layer code and component layer code). If the method doSomething() needs to pass parameters, as follows:</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomething:(<span class="type">NSString</span> <span class="operator">*</span>)name;</span><br><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomething:(<span class="type">Person</span> <span class="operator">*</span>)person;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>If this parameter is a Basic data type, like ‘NSString’, ‘NSDictionary’, or ‘NSInteger’, They do not affect the call.<br>But if this parameter is a business abstract type, it will be a little complex. But we can tackle it with the help of a dictionary.</p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomethingWithParam:(<span class="type">NSDictionary</span> <span class="operator">*</span>)params &#123;</span><br><span class="line">    <span class="type">Person</span> <span class="operator">*</span>p <span class="operator">=</span> [params objectForKey:<span class="string">&quot;person&quot;</span>];</span><br><span class="line">    [<span class="keyword">self</span> doSomething:p];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomething:(<span class="type">Person</span> <span class="operator">*</span>)person &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>So what we need to do next is called ‘- (void)doSomethingWithParam:(NSDictionary *)params’ to take the place of ‘- (void)doSomething:(Person *)person’.</p>
+<p>(3) The relevant code address is here: <a target="_blank" rel="noopener" href="https://github.com/zitao0206/DecoupleManager">https://github.com/zitao0206/DecoupleManager</a>.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/categories">Categories</a></li>
+        
+          <li><a href="/tags">Tags</a></li>
+        
+          <li><a href="/search">Search</a></li>
+        
+          <li><a href="/archives">Archives</a></li>
+        
+          <li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li>
+        
+          <li><a href="/about">Others</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Background"><span class="toc-number">1.</span> <span class="toc-text">1. Background</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-How-to-decouple-it"><span class="toc-number">2.</span> <span class="toc-text">2. How to decouple it?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Precautions"><span class="toc-number">3.</span> <span class="toc-text">3. Precautions</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&text=02. A Solution For Code Decoupling"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&is_video=false&description=02. A Solution For Code Decoupling"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=02. A Solution For Code Decoupling&body=Check out this article: https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&title=02. A Solution For Code Decoupling"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&name=02. A Solution For Code Decoupling&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://zitao0206.github.io/2024/02/13/iOS/02.%20Architecture%20&amp;%20Design/02.%20A%20Solution%20For%20Code%20Decoupling/&t=02. A Solution For Code Decoupling"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2023-2033
+    Zitao
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/categories">Categories</a></li><!--
+     --><!--
+       --><li><a href="/tags">Tags</a></li><!--
+     --><!--
+       --><li><a href="/search">Search</a></li><!--
+     --><!--
+       --><li><a href="/archives">Archives</a></li><!--
+     --><!--
+       --><li><a target="_blank" rel="noopener" href="https://github.com/zitao0206">Projects</a></li><!--
+     --><!--
+       --><li><a href="/about">Others</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+ 
+  <link
+    rel="preload"
+    href="/lib/font-awesome/css/all.min.css"
+    as="style"
+    onload="this.onload=null;this.rel='stylesheet'"
+  />
+  <noscript
+    ><link
+      rel="stylesheet"
+      href="/lib/font-awesome/css/all.min.css"
+  /></noscript>
+
+
+    <!-- jquery -->
+
+  
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+
+
+
+<!-- clipboard -->
+
+  
+    
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
