@@ -18,7 +18,7 @@
 <meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/002.jpg">
 <meta property="og:image" content="https://zitao0206.github.io/assets/iOS/Architecture&Design/003.jpg">
 <meta property="article:published_time" content="2024-02-13T15:00:00.000Z">
-<meta property="article:modified_time" content="2024-02-13T14:48:30.772Z">
+<meta property="article:modified_time" content="2024-02-13T14:57:43.181Z">
 <meta property="article:author" content="Zitao">
 <meta property="article:tag" content="Code Decoupling">
 <meta name="twitter:card" content="summary">
@@ -151,7 +151,7 @@
       
         <time datetime="2024-02-13T15:00:00.000Z" class="dt-published" itemprop="datePublished">2024-02-13</time>
         
-        (Updated: <time datetime="2024-02-13T14:48:30.772Z" class="dt-updated" itemprop="dateModified">2024-02-13</time>)
+        (Updated: <time datetime="2024-02-13T14:57:43.181Z" class="dt-updated" itemprop="dateModified">2024-02-13</time>)
         
       
     </div>
@@ -203,7 +203,8 @@
 <figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomethingWithParam:(<span class="type">NSDictionary</span> <span class="operator">*</span>)params &#123;</span><br><span class="line">    <span class="type">Person</span> <span class="operator">*</span>p <span class="operator">=</span> [params objectForKey:<span class="string">&quot;person&quot;</span>];</span><br><span class="line">    [<span class="keyword">self</span> doSomething:p];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="operator">-</span> (void)doSomething:(<span class="type">Person</span> <span class="operator">*</span>)person &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p>So what we need to do next is called ‘- (void)doSomethingWithParam:(NSDictionary *)params’ to take the place of ‘- (void)doSomething:(Person *)person’.</p>
-<p>(3) The relevant code address is here: <a target="_blank" rel="noopener" href="https://github.com/zitao0206/DecoupleManager">https://github.com/zitao0206/DecoupleManager</a>.</p>
+<p>(3) All the Services files like ‘BService’ can be stored together with ‘DecoupleServiceManager’, But it is recommended that all the Services files can be stored in a separate Pod in the common component layer.</p>
+<p>(4) The relevant code address is here: <a target="_blank" rel="noopener" href="https://github.com/zitao0206/DecoupleManager">https://github.com/zitao0206/DecoupleManager</a>.</p>
 
   </div>
 </article>
