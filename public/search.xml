@@ -1699,33 +1699,6 @@
     
     
     <entry>
-      <title>00. Three forms of Closures</title>
-      <link href="/2023/03/01/Swift/02.%20Closures/00.%20Three%20Forms%20of%20Closures/"/>
-      <url>/2023/03/01/Swift/02.%20Closures/00.%20Three%20Forms%20of%20Closures/</url>
-      
-        <content type="html"><![CDATA[<p><font color=gray size=2><em>It will take about 1 minutes to finish reading this article.</em></font></p><p>As the Apple official documents says, closures take one of three forms:</p><h4 id="1-Global-functions"><a href="#1-Global-functions" class="headerlink" title=" 1. Global functions "></a><font size=3 color=#4169E1> 1. Global functions </font></h4><p>Global functions are closures that have a name and don’t capture any values.</p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">setupBlock</span> &#123;</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>It is a special closure.</p><h4 id="2-Nested-functions"><a href="#2-Nested-functions" class="headerlink" title=" 2. Nested functions "></a><font size=3 color=#4169E1> 2. Nested functions </font></h4><p>Nested functions are closures that have a name and can capture values from their enclosing function. </p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">makeIncrementer</span>() -&gt; () -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> runningTotal <span class="operator">=</span> <span class="number">10</span></span><br><span class="line">    <span class="comment">// nested function，it is a closure too.</span></span><br><span class="line">    <span class="keyword">func</span> <span class="title function_">incrementer</span>() -&gt; <span class="type">Int</span>&#123;</span><br><span class="line">        runningTotal <span class="operator">+=</span> <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> runningTotal</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> incrementer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h4 id="3-Closure-expressions"><a href="#3-Closure-expressions" class="headerlink" title=" 3. Closure expressions "></a><font size=3 color=#4169E1> 3. Closure expressions </font></h4><p>Closure expressions are unnamed closures written in a lightweight syntax that can capture values from their surrounding context.</p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123; (param) -&gt; <span class="type">ReturnType</span> <span class="keyword">in</span></span><br><span class="line">    <span class="comment">// Method body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>Swift’s closure expressions have a clean, clear style, with optimizations that encourage brief, clutter-free syntax in common scenarios. These optimizations include:</p><ol><li>Inferring parameter and return value types from context</li><li>Implicit returns from single-expression closures</li><li>Shorthand argument names</li><li>Trailing closure syntax</li></ol><h4 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a><font size=3 color=gray><em>Reference</em></font></h4><p><a href="https://docs.swift.org/swift-book/LanguageGuide/Closures.html">https://docs.swift.org/swift-book/LanguageGuide/Closures.html</a>  </p>]]></content>
-      
-      
-      <categories>
-          
-          <category> Swift </category>
-          
-          <category> 02. Closures </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> Closures </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>01. Capturing Values</title>
       <link href="/2023/03/01/Swift/02.%20Closures/01.%20Capturing%20Values/"/>
       <url>/2023/03/01/Swift/02.%20Closures/01.%20Capturing%20Values/</url>
@@ -1745,6 +1718,33 @@
         <tags>
             
             <tag> Capturing </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>00. Three forms of Closures</title>
+      <link href="/2023/03/01/Swift/02.%20Closures/00.%20Three%20Forms%20of%20Closures/"/>
+      <url>/2023/03/01/Swift/02.%20Closures/00.%20Three%20Forms%20of%20Closures/</url>
+      
+        <content type="html"><![CDATA[<p><font color=gray size=2><em>It will take about 1 minutes to finish reading this article.</em></font></p><p>As the Apple official documents says, closures take one of three forms:</p><h4 id="1-Global-functions"><a href="#1-Global-functions" class="headerlink" title=" 1. Global functions "></a><font size=3 color=#4169E1> 1. Global functions </font></h4><p>Global functions are closures that have a name and don’t capture any values.</p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">setupBlock</span> &#123;</span><br><span class="line">    <span class="built_in">print</span>(<span class="string">&quot;Hello&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>It is a special closure.</p><h4 id="2-Nested-functions"><a href="#2-Nested-functions" class="headerlink" title=" 2. Nested functions "></a><font size=3 color=#4169E1> 2. Nested functions </font></h4><p>Nested functions are closures that have a name and can capture values from their enclosing function. </p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">func</span> <span class="title function_">makeIncrementer</span>() -&gt; () -&gt; <span class="type">Int</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> runningTotal <span class="operator">=</span> <span class="number">10</span></span><br><span class="line">    <span class="comment">// nested function，it is a closure too.</span></span><br><span class="line">    <span class="keyword">func</span> <span class="title function_">incrementer</span>() -&gt; <span class="type">Int</span>&#123;</span><br><span class="line">        runningTotal <span class="operator">+=</span> <span class="number">1</span></span><br><span class="line">        <span class="keyword">return</span> runningTotal</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> incrementer</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><h4 id="3-Closure-expressions"><a href="#3-Closure-expressions" class="headerlink" title=" 3. Closure expressions "></a><font size=3 color=#4169E1> 3. Closure expressions </font></h4><p>Closure expressions are unnamed closures written in a lightweight syntax that can capture values from their surrounding context.</p><figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#123; (param) -&gt; <span class="type">ReturnType</span> <span class="keyword">in</span></span><br><span class="line">    <span class="comment">// Method body</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>Swift’s closure expressions have a clean, clear style, with optimizations that encourage brief, clutter-free syntax in common scenarios. These optimizations include:</p><ol><li>Inferring parameter and return value types from context</li><li>Implicit returns from single-expression closures</li><li>Shorthand argument names</li><li>Trailing closure syntax</li></ol><h4 id="Reference"><a href="#Reference" class="headerlink" title="Reference"></a><font size=3 color=gray><em>Reference</em></font></h4><p><a href="https://docs.swift.org/swift-book/LanguageGuide/Closures.html">https://docs.swift.org/swift-book/LanguageGuide/Closures.html</a>  </p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Swift </category>
+          
+          <category> 02. Closures </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Closures </tag>
             
         </tags>
       

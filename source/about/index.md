@@ -18,7 +18,7 @@ Note: It contains the latest accumulation of Chinese technology.
 
 
 <font size=4>**2. Level Up**</font>  
-<font size=4>Already: **200+2+3** hours</font>  
+<font size=4>Already: **210** hours</font>  
 <font size=4>Senior: **1,000** hours, Percentage: **200/1,000 = 20%**</font>        
 <font size=4>Expert: **5,000** hours, Percentage: **200/10,000 = 4%**</font>         
 <font size=4>Master: **10,000** hours, Percentage: **200/10,000 = 1%**</font>         
